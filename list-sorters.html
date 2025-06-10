@@ -1,45 +1,35 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Priority Sorter</title>
-    <script src="https://p.trellocdn.com/power-up.min.js"></script>
-  </head>
-  <body>
-    <script>
-      const t = TrelloPowerUp.iframe();
+<script>
+  const t = TrelloPowerUp.iframe();
 
-      function getFieldValue(card, fieldId) {
-        const item = (card.customFieldItems || []).find(i => i.idCustomField === fieldId);
-        if (!item || !item.value || !item.value.text) return '';
-        return item.value.text;
-      }
+  function getFieldValue(card, fieldId) {
+    const item = (card.customFieldItems || []).find(i => i.idCustomField === fieldId);
+    if (!item || !item.value || !item.value.text) return '';
+    return item.value.text;
+  }
 
-      t.initialize({
-        'list-sorters': function(t, options) {
-          return [{
-            text: 'Sort by Priority (High → Low)',
-            callback: function(t, opts) {
-              return t.list('cards')
-                .then(list => {
-                  return t.get('board', 'shared', 'customFields')
-                    .then(customFields => {
-                      const priorityField = customFields.find(f => f.name === 'Priority');
-                      if (!priorityField) return list.cards;
+  t.initialize({
+    'list-sorters': function(t, options) {
+      return [{
+        text: 'Sort by Priority (High → Low)',
+        callback: function(t, opts) {
+          return t.list('cards', 'id,name,customFieldItems') // 👈 updated here
+            .then(list => {
+              return t.get('board', 'shared', 'customFields')
+                .then(customFields => {
+                  const priorityField = customFields.find(f => f.name === 'Priority');
+                  if (!priorityField) return list.cards;
 
-                      const priorityMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
+                  const priorityMap = { 'High': 3, 'Medium': 2, 'Low': 1 };
 
-                      return list.cards.sort((a, b) => {
-                        const aVal = getFieldValue(a, priorityField.id);
-                        const bVal = getFieldValue(b, priorityField.id);
-                        return (priorityMap[bVal] || 0) - (priorityMap[aVal] || 0);
-                      });
-                    });
+                  return list.cards.sort((a, b) => {
+                    const aVal = getFieldValue(a, priorityField.id);
+                    const bVal = getFieldValue(b, priorityField.id);
+                    return (priorityMap[bVal] || 0) - (priorityMap[aVal] || 0);
+                  });
                 });
-            }
-          }];
+            });
         }
-      });
-    </script>
-  </body>
-</html>
+      }];
+    }
+  });
+</script>
